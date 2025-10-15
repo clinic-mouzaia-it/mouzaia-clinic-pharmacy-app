@@ -5,20 +5,26 @@ import type {
 	StaffUser,
 	DistributeRequest,
 	DistributeResponse,
+	RestoreResponse,
 	ApiError,
 } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class ApiService {
-	private async getHeaders(): Promise<HeadersInit> {
+	private async getHeaders(includeContentType: boolean = true): Promise<HeadersInit> {
 		// Refresh token if it expires in 5 seconds
 		await keycloak.updateToken(5);
 
-		return {
-			"Content-Type": "application/json",
+		const headers: HeadersInit = {
 			Authorization: `Bearer ${keycloak.token}`,
 		};
+		
+		if (includeContentType) {
+			headers["Content-Type"] = "application/json";
+		}
+		
+		return headers;
 	}
 
 	async getMedicines(): Promise<Medicine[]> {
@@ -104,6 +110,46 @@ class ApiService {
 		if (!response.ok) {
 			const error: ApiError = await response.json();
 			throw new Error(error.message || error.error);
+		}
+
+		return response.json();
+	}
+
+	async getDeletedMedicines(): Promise<Medicine[]> {
+		const headers = await this.getHeaders();
+		const response = await fetch(`${API_BASE_URL}/pharmacy/medicines/deleted`, {
+			headers,
+		});
+
+		if (!response.ok) {
+			const error: ApiError = await response.json();
+			throw new Error(error.message || error.error);
+		}
+
+		return response.json();
+	}
+
+	async restoreMedicine(id: string): Promise<RestoreResponse> {
+		const headers = await this.getHeaders(false);
+		const response = await fetch(
+			`${API_BASE_URL}/pharmacy/medicines/${id}/restore`,
+			{
+				method: "PATCH",
+				headers,
+			}
+		);
+
+		if (!response.ok) {
+			const error: ApiError = await response.json();
+			throw new Error(error.message || error.error);
+		}
+
+		if (response.status === 204) {
+			return {
+				success: true,
+				message: "Medicine restored successfully",
+				medicine: {} as any,
+			};
 		}
 
 		return response.json();

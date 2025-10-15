@@ -77,3 +77,9 @@ export interface DistributeResponse {
     distributedAt: string;
   }>;
 }
+
+export interface RestoreResponse {
+  success: boolean;
+  message: string;
+  medicine: Medicine;
+}

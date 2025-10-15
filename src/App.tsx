@@ -3,14 +3,70 @@ import {
 	AppShell,
 	Container,
 	Title,
-	Text,
+	Group,
+	Button,
 } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
+import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
+import { IconTrash } from "@tabler/icons-react";
 import MedicinesList from "./components/MedicinesList";
+import DeletedMedicinesList from "./components/DeletedMedicinesList";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import { KeycloakProvider } from "./components/KeycloakProvider";
+import keycloak from "./config/keycloak";
+
+function AppContent() {
+	const location = useLocation();
+	const isDeletedPage = location.pathname === "/deleted";
+
+	// Check if user has permission to see deleted medicines
+	const hasViewDeletedPermission = keycloak.hasResourceRole(
+		"allowed_to_see_deleted_medicines",
+		"pharmacy-service"
+	);
+
+	return (
+		<AppShell header={{ height: 60 }} padding="md">
+			<AppShell.Header>
+				<Container
+					size="xl"
+					h="100%"
+					style={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+					}}
+				>
+					<Title order={3}>Mouzaia Clinic - Pharmacy</Title>
+					<Group gap="md">
+						{hasViewDeletedPermission && !isDeletedPage && (
+							<Button
+								component={Link}
+								to="/deleted"
+								leftSection={<IconTrash size={18} />}
+								variant="subtle"
+								color="gray"
+							>
+								Deleted Medicines
+							</Button>
+						)}
+					</Group>
+				</Container>
+			</AppShell.Header>
+
+			<AppShell.Main>
+				<Container size="xl">
+					<Routes>
+						<Route path="/" element={<MedicinesList />} />
+						<Route path="/deleted" element={<DeletedMedicinesList />} />
+					</Routes>
+				</Container>
+			</AppShell.Main>
+		</AppShell>
+	);
+}
 
 function App() {
 	return (
@@ -18,31 +74,9 @@ function App() {
 			<ModalsProvider>
 				<Notifications />
 				<KeycloakProvider>
-					<AppShell
-						header={{ height: 60 }}
-						padding='md'
-					>
-						<AppShell.Header>
-							<Container
-								size='xl'
-								h='100%'
-								style={{
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "space-between",
-								}}
-							>
-								<Title order={3}>Mouzaia Clinic - Pharmacy</Title>
-								<Text size='sm'>Pharmacy Management</Text>
-							</Container>
-						</AppShell.Header>
-
-						<AppShell.Main>
-							<Container size='xl'>
-								<MedicinesList />
-							</Container>
-						</AppShell.Main>
-					</AppShell>
+					<BrowserRouter>
+						<AppContent />
+					</BrowserRouter>
 				</KeycloakProvider>
 			</ModalsProvider>
 		</MantineProvider>
