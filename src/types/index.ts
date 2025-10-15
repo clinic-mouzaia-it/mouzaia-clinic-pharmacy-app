@@ -1,0 +1,79 @@
+import { z } from 'zod';
+
+// Medicine schemas
+export const MedicineSchema = z.object({
+  id: z.string().uuid(),
+  dci: z.string().min(1, 'DCI is required'),
+  nomCommercial: z.string().min(1, 'Commercial name is required'),
+  stock: z.number().int().min(0),
+  ddp: z.string().nullable(),
+  lot: z.string().nullable(),
+  cout: z.number().positive('Cost must be positive'),
+  prixDeVente: z.number().positive('Sale price must be positive'),
+  deleted: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const MedicineCreateSchema = z.object({
+  dci: z.string().min(1, 'DCI is required'),
+  nomCommercial: z.string().min(1, 'Commercial name is required'),
+  stock: z.number().int().min(0, 'Stock cannot be negative'),
+  ddp: z.string().optional(),
+  lot: z.string().optional(),
+  cout: z.number().positive('Cost must be positive'),
+  prixDeVente: z.number().positive('Sale price must be positive'),
+});
+
+export type Medicine = z.infer<typeof MedicineSchema>;
+export type MedicineCreate = z.infer<typeof MedicineCreateSchema>;
+
+// Staff User schema
+export const StaffUserSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  email: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  nationalId: z.string(),
+  roleMappings: z.any(),
+});
+
+export type StaffUser = z.infer<typeof StaffUserSchema>;
+
+// Distribution schema
+export const DistributionItemSchema = z.object({
+  id: z.string().uuid(),
+  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+});
+
+export type DistributionItem = z.infer<typeof DistributionItemSchema>;
+
+export const DistributeRequestSchema = z.object({
+  staffUser: StaffUserSchema,
+  medicines: z.array(DistributionItemSchema).min(1, 'At least one medicine is required'),
+});
+
+export type DistributeRequest = z.infer<typeof DistributeRequestSchema>;
+
+// API Response types
+export interface ApiError {
+  error: string;
+  message?: string;
+}
+
+export interface DistributeResponse {
+  success: boolean;
+  message: string;
+  distributions: Array<{
+    id: string;
+    medicineId: string;
+    quantity: number;
+    staffUserId: string;
+    staffUsername: string;
+    staffNationalId: string;
+    staffFullName: string | null;
+    distributedBy: string;
+    distributedAt: string;
+  }>;
+}
