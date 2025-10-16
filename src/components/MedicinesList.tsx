@@ -13,17 +13,27 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';
-import { IconPlus, IconTrash, IconQrcode, IconAlertTriangle } from '@tabler/icons-react';
+import { IconPlus, IconTrash, IconQrcode, IconAlertTriangle, IconPencil } from '@tabler/icons-react';
 import { apiService } from '../services/api';
 import type { Medicine } from '../types';
 import AddMedicineModal from './AddMedicineModal';
 import DistributeMedicinesModal from './DistributeMedicinesModal';
+import UpdateMedicineModal from './UpdateMedicineModal';
+import keycloak from '../config/keycloak';
 
 export default function MedicinesList() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [distributeModalOpen, setDistributeModalOpen] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
+
+  // Check if user has update permission
+  const hasUpdatePermission = keycloak.hasResourceRole(
+    'allowed_to_update_medicines',
+    'pharmacy-service'
+  );
 
   // Parse a yyyy-mm-dd string into a local Date (midnight) safely
   const parseYYYYMMDD = (input?: string | null) => {
@@ -119,6 +129,19 @@ export default function MedicinesList() {
       </Table.Td>
       <Table.Td>{medicine.lot || '-'}</Table.Td>
       <Table.Td>
+        {hasUpdatePermission && (
+          <ActionIcon
+            color="blue"
+            variant="subtle"
+            onClick={() => {
+              setSelectedMedicine(medicine);
+              setUpdateModalOpen(true);
+            }}
+            title="Edit medicine"
+          >
+            <IconPencil size={18} />
+          </ActionIcon>
+        )}
         <ActionIcon 
           color="red" 
           variant="subtle" 
@@ -195,6 +218,17 @@ export default function MedicinesList() {
           setDistributeModalOpen(false);
           loadMedicines();
         }}
+      />
+
+      <UpdateMedicineModal
+        opened={updateModalOpen}
+        onClose={() => setUpdateModalOpen(false)}
+        onSuccess={() => {
+          setUpdateModalOpen(false);
+          setSelectedMedicine(null);
+          loadMedicines();
+        }}
+        medicine={selectedMedicine}
       />
     </>
   );

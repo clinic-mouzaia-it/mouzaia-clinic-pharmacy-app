@@ -2,6 +2,7 @@ import keycloak from "../config/keycloak";
 import type {
 	Medicine,
 	MedicineCreate,
+	MedicineUpdate,
 	StaffUser,
 	DistributeRequest,
 	DistributeResponse,
@@ -150,6 +151,22 @@ class ApiService {
 				message: "Medicine restored successfully",
 				medicine: {} as any,
 			};
+		}
+
+		return response.json();
+	}
+
+	async updateMedicine(id: string, payload: MedicineUpdate): Promise<Medicine> {
+		const headers = await this.getHeaders();
+		const response = await fetch(`${API_BASE_URL}/pharmacy/medicines/${id}`, {
+			method: "PATCH",
+			headers,
+			body: JSON.stringify(payload),
+		});
+
+		if (!response.ok) {
+			const error: ApiError = await response.json();
+			throw new Error(error.message || error.error);
 		}
 
 		return response.json();

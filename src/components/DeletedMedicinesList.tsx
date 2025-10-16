@@ -13,20 +13,29 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';
-import { IconRestore, IconArrowLeft } from '@tabler/icons-react';
+import { IconRestore, IconArrowLeft, IconPencil } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { Medicine } from '../types';
 import keycloak from '../config/keycloak';
+import UpdateMedicineModal from './UpdateMedicineModal';
 
 export default function DeletedMedicinesList() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
   const navigate = useNavigate();
 
   // Check if user has restore permission
   const hasRestorePermission = keycloak.hasResourceRole(
     'allowed_to_restore_deleted_medicines',
+    'pharmacy-service'
+  );
+
+  // Check if user has permission to update deleted medicines
+  const hasUpdateDeletedPermission = keycloak.hasResourceRole(
+    'allowed_to_update_deleted_medicines',
     'pharmacy-service'
   );
 
@@ -104,6 +113,19 @@ export default function DeletedMedicinesList() {
       <Table.Td>{medicine.lot || '-'}</Table.Td>
       <Table.Td>{formatDate(medicine.updatedAt)}</Table.Td>
       <Table.Td>
+        {hasUpdateDeletedPermission && (
+          <ActionIcon
+            color="blue"
+            variant="subtle"
+            onClick={() => {
+              setSelectedMedicine(medicine);
+              setUpdateModalOpen(true);
+            }}
+            title="Edit deleted medicine"
+          >
+            <IconPencil size={18} />
+          </ActionIcon>
+        )}
         {hasRestorePermission && (
           <ActionIcon 
             color="teal" 
@@ -153,6 +175,17 @@ export default function DeletedMedicinesList() {
           </Table>
         )}
       </Box>
+
+      <UpdateMedicineModal
+        opened={updateModalOpen}
+        onClose={() => setUpdateModalOpen(false)}
+        onSuccess={() => {
+          setUpdateModalOpen(false);
+          setSelectedMedicine(null);
+          loadDeletedMedicines();
+        }}
+        medicine={selectedMedicine}
+      />
     </Stack>
   );
 }

@@ -25,8 +25,25 @@ export const MedicineCreateSchema = z.object({
   prixDeVente: z.number().positive('Sale price must be positive'),
 });
 
+// Partial update schema: all fields optional, but require at least one key present
+export const MedicineUpdateSchema = z
+  .object({
+    dci: z.string().min(1, 'DCI is required').optional(),
+    nomCommercial: z.string().min(1, 'Commercial name is required').optional(),
+    stock: z.number().int().min(0, 'Stock cannot be negative').optional(),
+    ddp: z.string().optional(),
+    lot: z.string().optional(),
+    cout: z.number().positive('Cost must be positive').optional(),
+    prixDeVente: z.number().positive('Sale price must be positive').optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided',
+    path: [],
+  });
+
 export type Medicine = z.infer<typeof MedicineSchema>;
 export type MedicineCreate = z.infer<typeof MedicineCreateSchema>;
+export type MedicineUpdate = z.infer<typeof MedicineUpdateSchema>;
 
 // Staff User schema
 export const StaffUserSchema = z.object({
