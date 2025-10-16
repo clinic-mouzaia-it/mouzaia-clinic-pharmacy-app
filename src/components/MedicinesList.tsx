@@ -13,7 +13,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';
-import { IconPlus, IconTrash, IconQrcode } from '@tabler/icons-react';
+import { IconPlus, IconTrash, IconQrcode, IconAlertTriangle } from '@tabler/icons-react';
 import { apiService } from '../services/api';
 import type { Medicine } from '../types';
 import AddMedicineModal from './AddMedicineModal';
@@ -24,6 +24,23 @@ export default function MedicinesList() {
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [distributeModalOpen, setDistributeModalOpen] = useState(false);
+
+  // Parse a yyyy-mm-dd string into a local Date (midnight) safely
+  const parseYYYYMMDD = (input?: string | null) => {
+    if (!input) return null;
+    const [y, m, d] = input.split('-').map((v) => Number(v));
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d, 0, 0, 0, 0);
+  };
+
+  // Returns true if ddp exists and is earlier than today (expired)
+  const isDDPPassed = (ddp?: string | null) => {
+    const date = parseYYYYMMDD(ddp);
+    if (!date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date.getTime() < today.getTime();
+  };
 
   const loadMedicines = async () => {
     try {
@@ -86,7 +103,20 @@ export default function MedicinesList() {
       </Table.Td>
       <Table.Td>{medicine.cout.toString()} DA</Table.Td>
       <Table.Td>{medicine.prixDeVente.toString()} DA</Table.Td>
-      <Table.Td>{medicine.ddp || '-'}</Table.Td>
+      <Table.Td>
+        {medicine.ddp ? (
+          <Group gap="xs">
+            <Text>{medicine.ddp}</Text>
+            {isDDPPassed(medicine.ddp) && (
+              <Badge color="red" variant="light" leftSection={<IconAlertTriangle size={14} />}>
+                Expired
+              </Badge>
+            )}
+          </Group>
+        ) : (
+          '-'
+        )}
+      </Table.Td>
       <Table.Td>{medicine.lot || '-'}</Table.Td>
       <Table.Td>
         <ActionIcon 

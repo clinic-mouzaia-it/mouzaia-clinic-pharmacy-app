@@ -130,6 +130,7 @@ export default function AddMedicineModal({ opened, onClose, onSuccess }: AddMedi
           <Group grow>
             <TextInput
               label="DDP (Optional)"
+              type="date"
               placeholder="Enter DDP"
               value={formData.ddp}
               onChange={(e) => setFormData({ ...formData, ddp: e.target.value })}
