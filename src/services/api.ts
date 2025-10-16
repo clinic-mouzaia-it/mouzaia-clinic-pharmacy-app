@@ -8,6 +8,7 @@ import type {
 	DistributeResponse,
 	RestoreResponse,
 	ApiError,
+	DistributionsListResponse,
 } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -163,6 +164,30 @@ class ApiService {
 			headers,
 			body: JSON.stringify(payload),
 		});
+
+		if (!response.ok) {
+			const error: ApiError = await response.json();
+			throw new Error(error.message || error.error);
+		}
+
+		return response.json();
+	}
+
+	async getDistributions(params?: {
+		staffNationalId?: string;
+		medicineId?: string;
+		limit?: number;
+		offset?: number;
+	}): Promise<DistributionsListResponse> {
+		const headers = await this.getHeaders(false);
+		const query = new URLSearchParams();
+		if (params?.staffNationalId) query.set("staffNationalId", params.staffNationalId);
+		if (params?.medicineId) query.set("medicineId", params.medicineId);
+		if (params?.limit) query.set("limit", String(params.limit));
+		if (params?.offset) query.set("offset", String(params.offset));
+
+		const url = `${API_BASE_URL}/pharmacy/distributions${query.toString() ? `?${query.toString()}` : ""}`;
+		const response = await fetch(url, { headers });
 
 		if (!response.ok) {
 			const error: ApiError = await response.json();

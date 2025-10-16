@@ -12,6 +12,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-do
 import { IconTrash } from "@tabler/icons-react";
 import MedicinesList from "./components/MedicinesList";
 import DeletedMedicinesList from "./components/DeletedMedicinesList";
+import DistributionsList from "./components/DistributionsList";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import { KeycloakProvider } from "./components/KeycloakProvider";
@@ -20,10 +21,16 @@ import keycloak from "./config/keycloak";
 function AppContent() {
 	const location = useLocation();
 	const isDeletedPage = location.pathname === "/deleted";
+	const isDistributionsPage = location.pathname === "/distributions";
 
 	// Check if user has permission to see deleted medicines
 	const hasViewDeletedPermission = keycloak.hasResourceRole(
 		"allowed_to_see_deleted_medicines",
+		"pharmacy-service"
+	);
+	// Check if user has permission to see distributions
+	const hasViewDistributions = keycloak.hasResourceRole(
+		"allowed_to_see_distributions",
 		"pharmacy-service"
 	);
 
@@ -41,6 +48,16 @@ function AppContent() {
 				>
 					<Title order={3}>Mouzaia Clinic - Pharmacy</Title>
 					<Group gap="md">
+						{hasViewDistributions && !isDistributionsPage && (
+							<Button
+								component={Link}
+								to="/distributions"
+								variant="subtle"
+								color="gray"
+							>
+								Distributions
+							</Button>
+						)}
 						{hasViewDeletedPermission && !isDeletedPage && (
 							<Button
 								component={Link}
@@ -61,6 +78,7 @@ function AppContent() {
 					<Routes>
 						<Route path="/" element={<MedicinesList />} />
 						<Route path="/deleted" element={<DeletedMedicinesList />} />
+						<Route path="/distributions" element={<DistributionsList />} />
 					</Routes>
 				</Container>
 			</AppShell.Main>

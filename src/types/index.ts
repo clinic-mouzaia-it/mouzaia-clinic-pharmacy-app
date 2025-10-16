@@ -100,3 +100,24 @@ export interface RestoreResponse {
   message: string;
   medicine: Medicine;
 }
+
+// Distributions listing types
+export interface Distribution {
+  id: string;
+  medicineId: string;
+  medicineName: string;
+  quantity: number;
+  staffUserId: string;
+  staffUsername: string;
+  staffNationalId: string;
+  staffFullName: string | null;
+  distributedBy: string;
+  distributedAt: string; // ISO string
+}
+
+export interface DistributionsListResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  items: Distribution[];
+}
